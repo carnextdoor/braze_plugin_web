@@ -1,16 +1,19 @@
+import 'package:braze_plugin_web/src/braze_client.dart';
 import 'package:braze_plugin_web/src/braze_models.dart';
 import 'package:braze_plugin_web/src/model_extensions.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:braze_plugin_web/src/braze_plugin_js.dart';
 import 'package:js/js.dart';
 import 'dart:developer';
 
-class BrazeClient {
-  BrazeClient._();
+class BrazeClientImpl implements BrazeClient{
+  BrazeClientImpl._();
+
+  static BrazeClient get instance => BrazeClientImpl._();
 
   /// Alternative to calling [initialize], allowing the provision of [InitializationOptions]
-  static void initializeWithOptions({
+  @override
+  void initializeWithOptions({
     required String apiKey,
     required BrazeInitializationOptions options,
     bool automaticallyShowInAppMessages = false,
@@ -48,7 +51,8 @@ class BrazeClient {
 
   /// An initializer for the [BrazeClient]. This or [initializeWithOptions]
   /// ***must*** be called for further operation with the [BrazeClient]
-  static void initialize({
+  @override
+  void initialize({
     required String apiKey,
     required String baseUrl,
     bool automaticallyShowInAppMessages = false,
@@ -72,11 +76,13 @@ class BrazeClient {
   /// the provided [userId], starting a new session for the provided credential.
   /// [BrazeClient.initialize] or [BrazeClient.initializeWithOptions]
   /// must be called before calling this
-  static void identify(String userId) {
+  @override
+  void identify(String userId) {
     BrazePluginJS.changeUser(userId, null);
   }
 
-  static void openSession() {
+  @override
+  void openSession() {
     BrazePluginJS.openSession();
   }
 
@@ -84,11 +90,12 @@ class BrazeClient {
   ///
   /// [BrazeClient.initialize] or [BrazeClient.initializeWithOptions]
   /// must be called before calling this
-  static void setCustomAttribute(
-    String key,
-    dynamic value, {
-    bool flush = false,
-  }) {
+  @override
+  void setCustomAttribute(
+      String key,
+      dynamic value, {
+        bool flush = false,
+      }) {
     final user = BrazePluginJS.getUser();
     user.setCustomUserAttribute(key, value, false);
 
@@ -99,10 +106,11 @@ class BrazeClient {
   ///
   /// [BrazeClient.initialize] or [BrazeClient.initializeWithOptions]
   /// must be called before calling this
-  static void setCustomAttributes(
-    Map<String, dynamic> attributes, {
-    bool flush = false,
-  }) {
+  @override
+  void setCustomAttributes(
+      Map<String, dynamic> attributes, {
+        bool flush = false,
+      }) {
     var user = BrazePluginJS.getUser();
     attributes.forEach((key, value) {
       user.setCustomUserAttribute(key, value, false);
@@ -116,11 +124,12 @@ class BrazeClient {
   ///
   /// [BrazeClient.initialize] or [BrazeClient.initializeWithOptions]
   /// must be called before calling this
-  static void logCustomEvent(
-    String key,
-    String? properties, {
-    bool flush = false,
-  }) {
+  @override
+  void logCustomEvent(
+      String key,
+      String? properties, {
+        bool flush = false,
+      }) {
     final brazeProperties = properties == null || properties.isEmpty ? properties : jsonParse(properties);
     BrazePluginJS.logCustomEvent(key, brazeProperties);
     if (flush) BrazePluginJS.requestImmediateDataFlush();
@@ -129,15 +138,16 @@ class BrazeClient {
   /// Requests an immediate refresh of content cards from Braze servers. By default, content cards are refreshed when a
   /// new session opens (see 'openSession` for more details), and when the user refreshes content cards
   /// manually via the refresh button. If you want to refresh content cards from the server at another time you must call this function.
-  static void requestContentCardRefresh({
+  @override
+  void requestContentCardRefresh({
     Function? successCallBack,
     Function? errorCallBack,
   }) {
     final successCallBackSubscriber =
-        allowInterop(successCallBack ?? () => debugPrint('$BrazeClient: content cards refreshed.'));
+    allowInterop(successCallBack ?? () => debugPrint('$BrazeClient: content cards refreshed.'));
 
     final errorCallBackSubscriber =
-        allowInterop(errorCallBack ?? () => debugPrint('$BrazeClient: content cards refresh failed.'));
+    allowInterop(errorCallBack ?? () => debugPrint('$BrazeClient: content cards refresh failed.'));
 
     BrazePluginJS.requestContentCardsRefresh(
       successCallBackSubscriber,
@@ -153,9 +163,10 @@ class BrazeClient {
   ///
   /// Returns string | undefined
   /// The identifier of the subscription created. This can be passed to removeSubscription to cancel the subscription. Returns undefined if the SDK has not been initialized.
-  static String subscribeToContentCardsUpdates(
-    Function(BrazeWebContentCards cards) callBack,
-  ) {
+  @override
+  String subscribeToContentCardsUpdates(
+      Function(BrazeWebContentCards cards) callBack,
+      ) {
     final subscriber = (ContentCards cardsData) {
       List<BrazeCard> brazeCards = cardsData.cards;
       List<BrazeWebCard> contentCards = [];
@@ -179,7 +190,8 @@ class BrazeClient {
   /// This method is equivalent to calling [logCardClick method with forContentCards param set to true.
   /// This is done automatically when you use Braze's display module and should only be called if you're
   /// bypassing that and manually building the DOM for displaying content cards in your own code.
-  static bool logContentCardClick(BrazeWebCard card) {
+  @override
+  bool logContentCardClick(BrazeWebCard card) {
     BrazeCard? brazeCard;
     if (card is BrazeWebImageOnly) {
       brazeCard = card.createBrazeCard();
@@ -191,7 +203,8 @@ class BrazeClient {
   /// Logs that the user dismissed the given card.
   /// This is done automatically when you use Braze's display module and
   /// should only be called if you're bypassing that and manually building the DOM for displaying the cards in your own code.
-  static bool logCardDismissal(BrazeWebCard card) {
+  @override
+  bool logCardDismissal(BrazeWebCard card) {
     BrazeCard? brazeCard;
     if (card is BrazeWebImageOnly) {
       brazeCard = card.createBrazeCard();
@@ -204,7 +217,8 @@ class BrazeClient {
   /// This method is equivalent to calling [logCardImpressions method with forContentCards param set to true.
   /// This is done automatically when you use Braze's display module and should only be called if you're bypassing
   /// that and manually building the DOM for displaying content cards in your own code.
-  static bool logContentCardImpressions(List<BrazeWebCard> cards) {
+  @override
+  bool logContentCardImpressions(List<BrazeWebCard> cards) {
     List<BrazeCard> brazeCards = [];
     for (var card in cards) {
       if (card is BrazeWebImageOnly) {
@@ -229,12 +243,13 @@ class BrazeClient {
   /// If push permission is denied or an error is encountered while registering, this
   /// callback will be invoked. If the denial is temporary, it will be
   /// invoked with a parameter of true - otherwise it will be invoked with a parameter of false.
-  static void requestPushPermission({
+  @override
+  void requestPushPermission({
     Function(String endpoint, String, String userAuth)? successCallback,
     Function(bool temporaryDenial)? deniedCallback,
   }) {
     final sCallBack = successCallback ??
-        (endpoint, publicKey, userAuth) {
+            (endpoint, publicKey, userAuth) {
           if (kDebugMode) {
             log('subscribed to push successfully', name: '$BrazeClient');
             log(endpoint, name: '$BrazeClient');
@@ -244,7 +259,7 @@ class BrazeClient {
         };
 
     final dCallBack = deniedCallback ??
-        (temporaryDenial) {
+            (temporaryDenial) {
           log('Failed to subscribe: $temporaryDenial', name: '$BrazeClient');
         };
 
@@ -255,7 +270,8 @@ class BrazeClient {
   }
 
   /// Remove an event subscription that you previously subscribed to.
-  static bool removeSubscription(String subscriptionGuid) {
+  @override
+  bool removeSubscription(String subscriptionGuid) {
     try {
       BrazePluginJS.removeSubscription(subscriptionGuid);
       return true;
@@ -268,16 +284,17 @@ class BrazeClient {
   /// Note that for Safari, Apple does not offer any unsubscribe mechanism,
   /// so on Safari this method leaves the user with push permission granted and simply
   /// sets their subscription status to unsubscribed.
-  static void unregisterPush({Function()? successCallback, Function()? errorCallback}) {
+  @override
+  void unregisterPush({Function()? successCallback, Function()? errorCallback}) {
     final sCallBack = successCallback ??
-        () {
+            () {
           if (kDebugMode) {
             log('unregistered push subscription successfully', name: '$BrazeClient');
           }
         };
 
     final eCallBack = errorCallback ??
-        () {
+            () {
           if (kDebugMode) {
             log('Failed to unregistered', name: '$BrazeClient');
           }
@@ -288,7 +305,8 @@ class BrazeClient {
     );
   }
 
-  static BrazeWebContentCards getCachedContentCards() {
+  @override
+  BrazeWebContentCards getCachedContentCards() {
     ContentCards contentCard = BrazePluginJS.getCachedContentCards();
     List<BrazeWebCard> contentCards = [];
     for (var card in contentCard.cards) {
@@ -296,15 +314,5 @@ class BrazeClient {
       contentCards.add(imageOnly.createImageOnlyCard());
     }
     return BrazeWebContentCards(cards: contentCards, lastUpdated: contentCard.lastUpdated);
-  }
-}
-
-/// Implementation of the Braze Plugin for Web.
-class BrazePluginWeb {
-  static late BrazePluginWeb instance;
-
-  static void registerWith(Registrar registrar) {
-    /// Don't intend to use method channel for web, as this adds an overhead
-    instance = BrazePluginWeb();
   }
 }
